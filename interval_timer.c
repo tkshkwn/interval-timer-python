@@ -117,7 +117,7 @@ static int interval_timer_destruct_linux(interval_timer_t itimer)
 #endif  // __linux
 
 #ifdef _WIN32
-static interval_timer_t *interval_timer_construct_win(void)
+static interval_timer_t interval_timer_construct_win(void)
 {
     interval_timer_t itimer = NULL;
     HANDLE htimer;
@@ -133,7 +133,7 @@ static interval_timer_t *interval_timer_construct_win(void)
     itimer->htimer = htimer;
     itimer->duetime.QuadPart = 0;
     itimer->interval = 0;
-    if (!CancelWaitableTimer(self->itimer)) {
+    if (!CancelWaitableTimer(itimer->htimer)) {
         return NULL;
     }
     return itimer;
