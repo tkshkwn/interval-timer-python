@@ -31,9 +31,6 @@ static int IntervalTimer_init(IntervalTimerObject *self, PyObject *args, PyObjec
         Py_DECREF(self);
         return 1;
     }
-    if (!CancelWaitableTimer(self->itimer)) {
-        return 1;
-    }
     return 0;
 }
 
