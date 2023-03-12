@@ -1,3 +1,13 @@
+/**
+ * @file interval_timer.h
+ * @author tkshkwn (nekotk37@gmail.com)
+ * @brief interval_timer.h 
+ * @version 0.1
+ * @date 2023-03-12
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 #include <stdint.h>
 
 #define INTERVAL_TIMER_OK 0

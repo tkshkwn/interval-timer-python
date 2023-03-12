@@ -1,3 +1,13 @@
+/**
+ * @file interval_timer_python.c
+ * @author tkshkwn (nekotk37@gmail.com)
+ * @brief interval_timer_python.c
+ * @version 0.1
+ * @date 2023-03-12
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 #include <Python.h>
 
 #include "interval_timer.h"

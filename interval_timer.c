@@ -1,3 +1,13 @@
+/**
+ * @file interval_timer.c
+ * @author tkshkwn (nekotk37@gmail.com)
+ * @brief interval_timer.c
+ * @version 0.1
+ * @date 2023-03-12
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 #ifdef __linux
 #include <stdlib.h>
 #include <unistd.h>
