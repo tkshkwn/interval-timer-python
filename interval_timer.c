@@ -15,7 +15,7 @@
 struct interval_timer {
     int64_t interval;
 #ifdef __linux
-	int32_t tfd;
+    int32_t tfd;
 #elif _WIN32
     HANDLE htimer;
     LARGE_INTEGER duetime;
@@ -75,44 +75,44 @@ int interval_timer_destruct(interval_timer_t itimer)
 #ifdef __linux
 static interval_timer_t interval_timer_construct_linux(void)
 {
-	interval_timer_t itimer;
-	int32_t tfd = timerfd_create(CLOCK_MONOTONIC, 0);
-	if (tfd == -1) {
-		return NULL;
-	}
+    interval_timer_t itimer;
+    int32_t tfd = timerfd_create(CLOCK_MONOTONIC, 0);
+    if (tfd == -1) {
+        return NULL;
+    }
     itimer = (interval_timer_t)malloc(sizeof(struct interval_timer));
     if (itimer == NULL) {
         return NULL;
     }
     itimer->interval = 0;
-	itimer->tfd = tfd;
-	return itimer;
+    itimer->tfd = tfd;
+    return itimer;
 }
 
 static int interval_timer_settime_linux(interval_timer_t itimer, int64_t interval)
 {
-	struct itimerspec its;
-	uint32_t interval_sec = interval / 1000;
-	uint64_t interval_nsec = (interval - (interval_sec * 1000)) * 1000000;
-	its.it_interval.tv_sec = interval_sec;
-	its.it_interval.tv_nsec = interval_nsec;
-	its.it_value.tv_sec = interval_sec;
-	its.it_value.tv_nsec = interval_nsec;
-	timerfd_settime(itimer->tfd, 0, &its, 0);
-	return 0;
+    struct itimerspec its;
+    uint32_t interval_sec = interval / 1000;
+    uint64_t interval_nsec = (interval - (interval_sec * 1000)) * 1000000;
+    its.it_interval.tv_sec = interval_sec;
+    its.it_interval.tv_nsec = interval_nsec;
+    its.it_value.tv_sec = interval_sec;
+    its.it_value.tv_nsec = interval_nsec;
+    timerfd_settime(itimer->tfd, 0, &its, 0);
+    return 0;
 }
 
 static void interval_timer_wait_linux(interval_timer_t itimer)
 {
-	static uint64_t buf;
-	read(itimer->tfd, &buf, sizeof(uint64_t));
+    static uint64_t buf;
+    read(itimer->tfd, &buf, sizeof(uint64_t));
 }
 
 static int interval_timer_destruct_linux(interval_timer_t itimer)
 {
-	close(itimer->tfd);
-	free(itimer);
-	return 0;
+    close(itimer->tfd);
+    free(itimer);
+    return 0;
 }
 #endif  // __linux
 
