@@ -79,7 +79,6 @@ static interval_timer_t interval_timer_construct_linux(void)
     if (itimer == NULL) {
         return NULL;
     }
-    itimer->interval = 0;
     itimer->tfd = tfd;
     return itimer;
 }
