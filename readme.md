@@ -1,1 +1,1 @@
-## timerfd-python
+## interval-timer-python
