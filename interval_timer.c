@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <time.h>
-
 #ifdef __linux
 #include <stdlib.h>
 #include <unistd.h>
@@ -13,24 +10,22 @@
 
 
 struct interval_timer {
-    int64_t interval;
 #ifdef __linux
     int32_t tfd;
 #elif _WIN32
     HANDLE htimer;
-    LARGE_INTEGER duetime;
 #endif
 };
 
 
 #ifdef __linux
 static interval_timer_t interval_timer_construct_linux(void);
-static int interval_timer_settime_linux(interval_timer_t itimer, int64_t interval);
+static int interval_timer_settime_linux(interval_timer_t itimer, int64_t interval_ms);
 static void interval_timer_wait_linux(interval_timer_t itimer);
 static int interval_timer_destruct_linux(interval_timer_t itimer);
 #elif _WIN32
 static interval_timer_t interval_timer_construct_win(void);
-static int interval_timer_settime_win(interval_timer_t itimer, int64_t interval);
+static int interval_timer_settime_win(interval_timer_t itimer, int64_t interval_ms);
 static void interval_timer_wait_win(interval_timer_t itimer);
 static int interval_timer_destruct_win(interval_timer_t itimer);
 #endif
@@ -45,12 +40,12 @@ interval_timer_t interval_timer_construct(void)
 #endif
 }
 
-int interval_timer_settime(interval_timer_t itimer, int64_t interval)
+int interval_timer_settime(interval_timer_t itimer, int64_t interval_ms)
 {
 #ifdef __linux
-    return interval_timer_settime_linux(itimer, interval);
+    return interval_timer_settime_linux(itimer, interval_ms);
 #elif _WIN32
-    return interval_timer_settime_win(itimer, interval);
+    return interval_timer_settime_win(itimer, interval_ms);
 #endif
 }
 
@@ -89,17 +84,17 @@ static interval_timer_t interval_timer_construct_linux(void)
     return itimer;
 }
 
-static int interval_timer_settime_linux(interval_timer_t itimer, int64_t interval)
+static int interval_timer_settime_linux(interval_timer_t itimer, int64_t interval_ms)
 {
     struct itimerspec its;
-    uint32_t interval_sec = interval / 1000;
-    uint64_t interval_nsec = (interval - (interval_sec * 1000)) * 1000000;
+    uint32_t interval_sec = interval_ms / 1000;
+    uint64_t interval_nsec = (interval_ms - (interval_sec * 1000)) * 1000000;
     its.it_interval.tv_sec = interval_sec;
     its.it_interval.tv_nsec = interval_nsec;
     its.it_value.tv_sec = interval_sec;
     its.it_value.tv_nsec = interval_nsec;
     timerfd_settime(itimer->tfd, 0, &its, 0);
-    return 0;
+    return INTERVAL_TIMER_OK;
 }
 
 static void interval_timer_wait_linux(interval_timer_t itimer)
@@ -112,7 +107,7 @@ static int interval_timer_destruct_linux(interval_timer_t itimer)
 {
     close(itimer->tfd);
     free(itimer);
-    return 0;
+    return INTERVAL_TIMER_OK;
 }
 #endif  // __linux
 
@@ -121,7 +116,7 @@ static interval_timer_t interval_timer_construct_win(void)
 {
     interval_timer_t itimer = NULL;
     HANDLE htimer;
-    htimer = CreateWaitableTimer(NULL, TRUE, NULL);
+    htimer = CreateWaitableTimerW(NULL, FALSE, NULL);
     if (htimer == NULL) {
         /* error */
         return NULL;
@@ -131,8 +126,6 @@ static interval_timer_t interval_timer_construct_win(void)
         return NULL;
     }
     itimer->htimer = htimer;
-    itimer->duetime.QuadPart = 0;
-    itimer->interval = 0;
     if (!CancelWaitableTimer(itimer->htimer)) {
         return NULL;
     }
@@ -141,16 +134,13 @@ static interval_timer_t interval_timer_construct_win(void)
 
 static int interval_timer_settime_win(interval_timer_t itimer, int64_t interval_ms)
 {
-    FILETIME ft;
-    GetSystemTimeAsFileTime(&ft);
-    itimer->interval = interval_ms * 1000 * 10;
-    itimer->duetime.LowPart = ft.dwLowDateTime;
-    itimer->duetime.HighPart = ft.dwHighDateTime;
-    (itimer->duetime).QuadPart += itimer->interval;
-    if (!SetWaitableTimer(itimer->htimer, &(itimer->duetime), 0, NULL, NULL, 0)) {
+    LARGE_INTEGER duetime;
+    duetime.QuadPart = -10000 * (LONG)interval_ms;
+    if (!SetWaitableTimer(itimer->htimer, &duetime, interval_ms, NULL, NULL, 0)) {
         /* error */
+        return INTERVAL_TIMER_ERROR;
     }
-    return 0;
+    return INTERVAL_TIMER_OK;
 }
 
 static void interval_timer_wait_win(const interval_timer_t itimer)
@@ -159,18 +149,14 @@ static void interval_timer_wait_win(const interval_timer_t itimer)
         /* error */
         return;
     }
-    (itimer->duetime).QuadPart += itimer->interval;
-    if (!SetWaitableTimer(itimer->htimer, &(itimer->duetime), 0, NULL, NULL, 0)) {
-        /* error */
-    }
 }
 
 static int interval_timer_destruct_win(interval_timer_t itimer)
 {
     if (!CloseHandle(itimer->htimer)) {
-        return 1;
+        return INTERVAL_TIMER_ERROR;
     }
     free(itimer);
-    return 0;
+    return INTERVAL_TIMER_OK;
 }
 #endif  // _WIN32
