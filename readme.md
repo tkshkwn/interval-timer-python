@@ -10,7 +10,7 @@
 
 ### installation
 ```bash
-python setup.py install
+python -m pip install interval-timer-python
 ```
 
 ### usage
