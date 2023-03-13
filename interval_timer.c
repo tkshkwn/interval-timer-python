@@ -30,12 +30,12 @@ struct interval_timer {
 
 #ifdef __linux
 static interval_timer_t interval_timer_construct_linux(void);
-static int interval_timer_settime_linux(interval_timer_t itimer, int64_t interval_ms);
+static int interval_timer_settime_linux(interval_timer_t itimer, int32_t interval_ms);
 static void interval_timer_wait_linux(interval_timer_t itimer);
 static int interval_timer_destruct_linux(interval_timer_t itimer);
 #elif _WIN32
 static interval_timer_t interval_timer_construct_win(void);
-static int interval_timer_settime_win(interval_timer_t itimer, int64_t interval_ms);
+static int interval_timer_settime_win(interval_timer_t itimer, int32_t interval_ms);
 static void interval_timer_wait_win(interval_timer_t itimer);
 static int interval_timer_destruct_win(interval_timer_t itimer);
 #endif
@@ -50,7 +50,7 @@ interval_timer_t interval_timer_construct(void)
 #endif
 }
 
-int interval_timer_settime(interval_timer_t itimer, int64_t interval_ms)
+int interval_timer_settime(interval_timer_t itimer, int32_t interval_ms)
 {
 #ifdef __linux
     return interval_timer_settime_linux(itimer, interval_ms);
@@ -93,7 +93,7 @@ static interval_timer_t interval_timer_construct_linux(void)
     return itimer;
 }
 
-static int interval_timer_settime_linux(interval_timer_t itimer, int64_t interval_ms)
+static int interval_timer_settime_linux(interval_timer_t itimer, int32_t interval_ms)
 {
     struct itimerspec its;
     uint32_t interval_sec = interval_ms / 1000;
@@ -141,7 +141,7 @@ static interval_timer_t interval_timer_construct_win(void)
     return itimer;
 }
 
-static int interval_timer_settime_win(interval_timer_t itimer, int64_t interval_ms)
+static int interval_timer_settime_win(interval_timer_t itimer, int32_t interval_ms)
 {
     LARGE_INTEGER duetime;
     duetime.QuadPart = -10000 * (LONG)interval_ms;
